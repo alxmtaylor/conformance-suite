@@ -9,6 +9,7 @@ import (
 	"github.com/tidwall/gjson"
 	resty "gopkg.in/resty.v1"
 
+	"github.com/OpenBankingUK/conformance-suite/pkg/authentication"
 	"github.com/OpenBankingUK/conformance-suite/pkg/generation"
 	"github.com/OpenBankingUK/conformance-suite/pkg/manifest"
 	"github.com/OpenBankingUK/conformance-suite/pkg/model"
@@ -90,7 +91,7 @@ func getPaymentHeadlessTokens(paymentTests []model.TestCase, ctx *model.Context,
 func CallPaymentHeadlessConsentUrls(rt *[]manifest.RequiredTokens, ctx *model.Context, logger *logrus.Entry) (map[string]string, error) {
 	var matchingGroup []string
 	exchangeCode := ""
-	exhangeCodeRegex := "code=([^&]*)&"
+	exhangeCodeRegex := "[?&]code=([^&]*)"
 	consentedTokens := map[string]string{}
 
 	for _, tokendata := range *rt {
@@ -101,30 +102,31 @@ func CallPaymentHeadlessConsentUrls(rt *[]manifest.RequiredTokens, ctx *model.Co
 			SetHeader("accept", "*/*").
 			Get(endpoint)
 
-		if err != nil {
-			if resp != nil && resp.StatusCode() == http.StatusFound { // catch status code 302 redirects and pass back as good response
-				header := resp.Header()
-				logger.Debugf("redirection headers: %#v", header)
-				location := header.Get("Location")
-				if location != "" {
-					r, err := regexp.Compile(exhangeCodeRegex)
-					if err != nil {
-						return nil, err
-					}
-					matchingGroup = r.FindStringSubmatch(location)
-					if len(matchingGroup[0]) < 2 {
-						return nil, fmt.Errorf("Header Regex Context Match Failed - regex (%s) failed to find anything on Header (%s) value (%s)", exhangeCodeRegex, "Location", location)
-					}
-					exchangeCode = matchingGroup[1]
-					logger.Tracef("retrieved Exchange code: %s", exchangeCode)
-				}
+		// callbackRedirectPolicy returns http.ErrUseLastResponse, which makes Go's
+		// http.Client return the 302 with err==nil. Handle both err==nil and err!=nil
+		// 302 responses uniformly; only hard-fail on non-302 errors.
+		if err != nil && (resp == nil || resp.StatusCode() != http.StatusFound) {
+			logger.WithFields(logrus.Fields{
+				"endpoint": endpoint,
+				"err":      err,
+			}).Debug("Error Calling Payment ConsentURL to get code")
+			return nil, err
+		}
 
-			} else {
-				logger.WithFields(logrus.Fields{
-					"endpoint": endpoint,
-					"err":      err,
-				}).Debug("Error Calling Payment ConsentURL to get code")
-				return nil, err
+		if resp != nil && resp.StatusCode() == http.StatusFound {
+			logger.Debugf("redirection headers: %#v", resp.Header())
+			location := resp.Header().Get("Location")
+			if location != "" {
+				r, err := regexp.Compile(exhangeCodeRegex)
+				if err != nil {
+					return nil, err
+				}
+				matchingGroup = r.FindStringSubmatch(location)
+				if len(matchingGroup) < 2 {
+					return nil, fmt.Errorf("Header Regex Context Match Failed - regex (%s) failed to find anything on Header (%s) value (%s)", exhangeCodeRegex, "Location", location)
+				}
+				exchangeCode = matchingGroup[1]
+				logger.Tracef("retrieved Exchange code: %s", exchangeCode)
 			}
 		}
 
@@ -132,23 +134,34 @@ func CallPaymentHeadlessConsentUrls(rt *[]manifest.RequiredTokens, ctx *model.Co
 			return nil, fmt.Errorf("Exchange code is empty - cannot complete exchange")
 		}
 
-		params, err := ctx.GetStrings("basic_authentication", "token_endpoint", "redirect_url")
+		params, err := ctx.GetStrings("token_endpoint", "redirect_url")
 		if err != nil {
 			logger.Errorf("Consent Failed to get %s from context", err.Error())
 			return nil, err
 		}
 
-		resp, err = resty.R().
+		authMethod, _ := ctx.GetString("token_endpoint_auth_method")
+		formData := map[string]string{
+			"code":         exchangeCode,
+			"redirect_uri": params["redirect_url"],
+			"grant_type":   "authorization_code",
+			"scope":        "payments",
+		}
+		req := resty.R().
 			SetHeader("content-type", "application/x-www-form-urlencoded").
-			SetHeader("accept", "application/json").
-			SetHeader("authorization", "Basic "+params["basic_authentication"]).
-			SetFormData(map[string]string{
-				"code":         exchangeCode,
-				"redirect_uri": params["redirect_url"],
-				"grant_type":   "authorization_code",
-				"scope":        "payments",
-			}).
-			Post(params["token_endpoint"])
+			SetHeader("accept", "application/json")
+		switch authMethod {
+		case authentication.TlsClientAuth:
+			clientID, cerr := ctx.GetString("client_id")
+			if cerr != nil {
+				return nil, errors.Wrap(cerr, "cannot find client_id for tls_client_auth token exchange")
+			}
+			formData["client_id"] = clientID
+		default:
+			basicAuth, _ := ctx.GetString("basic_authentication")
+			req = req.SetHeader("authorization", "Basic "+basicAuth)
+		}
+		resp, err = req.SetFormData(formData).Post(params["token_endpoint"])
 
 		if err != nil {
 			logger.WithFields(logrus.Fields{
@@ -253,7 +266,7 @@ func getHeadlessTokenComponent(ctx *model.Context) (*model.Component, error) {
 	if err != nil {
 		return &comp, fmt.Errorf("error loading headlessTokenProvider component:" + err.Error())
 	}
-	
+
 	return &comp, nil
 
 }
