@@ -131,6 +131,8 @@ func (wj *AppJourney) SetDiscoveryModel(discoveryModel *discovery.Model) (discov
 	wj.validDiscoveryModel = discoveryModel
 	wj.testCasesRunGenerated = false
 	wj.allCollected = false
+	wj.context = model.Context{}
+	manifest.ResetConsentJobs()
 
 	if discoveryModel.DiscoveryModel.DiscoveryVersion == "v0.4.0" { // Conditional properties requires 0.4.0
 		//TODO: remove this constraint once support for v0.3.0 discovery model is dropped

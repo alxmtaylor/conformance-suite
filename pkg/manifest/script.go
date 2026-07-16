@@ -86,6 +86,11 @@ func GetConsentJobs() *ConsentJobs {
 	return cj
 }
 
+// ResetConsentJobs clears the global consent jobs singleton so the next run starts fresh.
+func ResetConsentJobs() {
+	cj = nil
+}
+
 // Add a consent Job
 func (cj *ConsentJobs) Add(tc model.TestCase) {
 	cj.jobs[tc.ID] = tc
