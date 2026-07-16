@@ -11,7 +11,9 @@ func ResultWriter(w io.Writer, results []TestCase) {
 	for _, result := range results {
 		fmt.Fprintf(w, "=== %s: %s\n", passMsg[result.Pass], result.Id)
 		if !result.Pass {
-			fmt.Fprintf(w, "\t %s\n", result.Fail)
+			for _, msg := range result.Fail {
+				fmt.Fprintf(w, "\t %s\n", msg)
+			}
 		}
 	}
 }
