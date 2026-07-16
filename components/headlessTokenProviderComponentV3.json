@@ -24,12 +24,12 @@
           "endpoint": "$token_endpoint",
           "headers": {
             "content-type": "application/x-www-form-urlencoded",
-            "accept": "application/json",
-            "authorization": "Basic $basic_authentication"
+            "accept": "application/json"
           },
           "formData": {
             "grant_type": "client_credentials",
-            "scope": "accounts openid"
+            "scope": "accounts openid",
+            "client_id": "$client_id"
           }
         },
         "context": {
@@ -95,8 +95,8 @@
             "scope": "openid accounts",
             "redirect_url": "$redirect_url",
             "consentId": "$consent_id",
-            "responseType": "code",
-            "state": "<state_should_not_empty>",
+            "responseType": "$responseType",
+            "state": "$result_token",
             "nonce": "true",
             "exp": "true"
           }
@@ -111,7 +111,7 @@
               "name": "xchange_code",
               "description": "Get the xchange code from the location redirect header on hitting consent url for headless",
               "header": "Location",
-              "regex": "code=(.*)&"
+              "regex": "code=([^&]*)"
             }]
           }
         }
@@ -124,14 +124,14 @@
           "endpoint": "$token_endpoint",
           "headers": {
             "content-type": "application/x-www-form-urlencoded",
-            "authorization": "Basic $basic_authentication",
             "accept": "application/json"
           },
           "formData": {
             "code": "$xchange_code",
             "grant_type": "authorization_code",
             "redirect_uri": "$redirect_url",
-            "scope": "accounts"
+            "scope": "accounts",
+            "client_id": "$client_id"
           }
         },
         "context": {
