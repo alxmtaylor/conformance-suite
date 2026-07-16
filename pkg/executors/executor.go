@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/OpenBankingUK/conformance-suite/pkg/authentication"
 	"github.com/OpenBankingUK/conformance-suite/pkg/authentication/certificates"
@@ -141,6 +142,22 @@ func (e *Executor) setupTLSCertificate(tlsCert tls.Certificate) error {
 	}
 	tlsConfig.BuildNameToCertificate()
 	resty.SetTLSClientConfig(tlsConfig)
+	resty.SetRedirectPolicy(callbackRedirectPolicy{})
+	return nil
+}
+
+// callbackRedirectPolicy follows redirects normally but stops when the next
+// redirect targets the conformance suite callback, returning that 302 so the
+// auth code can be extracted from its Location header.
+type callbackRedirectPolicy struct{}
+
+func (callbackRedirectPolicy) Apply(req *http.Request, via []*http.Request) error {
+	if strings.Contains(req.URL.String(), "conformancesuite/callback") {
+		return http.ErrUseLastResponse
+	}
+	if len(via) >= 10 {
+		return fmt.Errorf("stopped after 10 redirects")
+	}
 	return nil
 }
 
