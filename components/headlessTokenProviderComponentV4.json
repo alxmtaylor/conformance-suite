@@ -51,7 +51,7 @@
         "name": "PostAccount Request",
         "input": {
           "method": "POST",
-          "endpoint": "/open-banking/v3.1/aisp/account-access-consents",
+          "endpoint": "/open-banking/$api-version/aisp/account-access-consents",
           "headers": {
             "content-type": "application/json",
             "accept": "application/json",
@@ -95,8 +95,8 @@
             "scope": "openid accounts",
             "redirect_url": "$redirect_url",
             "consentId": "$consent_id",
-            "responseType": "code",
-            "state": "<state_should_not_empty>",
+            "responseType": "$responseType",
+            "state": "$result_token",
             "nonce": "true",
             "exp": "true"
           }
@@ -111,7 +111,7 @@
               "name": "xchange_code",
               "description": "Get the xchange code from the location redirect header on hitting consent url for headless",
               "header": "Location",
-              "regex": "code=(.*)&"
+              "regex": "code=([^&]*)"
             }]
           }
         }
