@@ -253,6 +253,38 @@ func getAccountsHeadlessTokens(tests []model.TestCase, ctx *model.Context, defin
 	return requiredTokens, nil
 }
 
+func configureHeadlessTokenEndpointAuth(test *model.TestCase, ctx *model.Context) error {
+	if test.Input.Endpoint != "$token_endpoint" {
+		return nil
+	}
+
+	grantType := test.Input.FormData["grant_type"]
+	if grantType != "client_credentials" && grantType != authentication.GrantTypeAuthorizationCode {
+		return nil
+	}
+
+	authMethod, err := ctx.GetString("token_endpoint_auth_method")
+	if err != nil {
+		return errors.Wrap(err, "cannot find token_endpoint_auth_method for headless token request")
+	}
+
+	switch authMethod {
+	case authentication.ClientSecretBasic:
+		return nil
+	case authentication.TlsClientAuth:
+		clientID, err := ctx.GetString("client_id")
+		if err != nil {
+			return errors.Wrap(err, "cannot find client_id for tls_client_auth headless token request")
+		}
+
+		test.Input.RemoveHeaders = append(test.Input.RemoveHeaders, "authorization")
+		test.Input.SetFormField("client_id", clientID)
+		return nil
+	default:
+		return errors.Errorf("unsupported token_endpoint_auth_method %q for headless token request", authMethod)
+	}
+}
+
 func getHeadlessTokenComponent(ctx *model.Context) (*model.Component, error) {
 	version, err := ctx.GetString("api-version")
 	if err != nil {
@@ -292,6 +324,9 @@ func executeComponent(ctx *model.Context, executor TestCaseExecutor) (*model.Con
 	logrus.Debugf("We have %d tests to run ", len(tests))
 	// run sequentially - don't care about async ... its a startup task, not a run task.
 	for k, test := range tests {
+		if err := configureHeadlessTokenEndpointAuth(&test, executeCtx); err != nil {
+			return &model.Context{}, err
+		}
 		test.ProcessReplacementFields(executeCtx, false)
 		_, _ = k, test
 		logrus.Debug("Executing ------->>")
