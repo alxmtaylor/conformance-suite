@@ -2,12 +2,28 @@ import * as _ from 'lodash';
 import moment from 'moment';
 import api from '../../../api';
 import constants from './constants';
+import { validatePaymentFrequency, validateV4StandingOrderFrequency } from './frequency';
 import * as types from './mutation-types.js';
 
 const findImageData = (model, images) => {
   const { name } = model.discoveryModel;
   const customImage = `./${name}.png`;
-  return images[customImage] || images['./no-image-discovery-icon.png'];
+  if (images[customImage]) {
+    return images[customImage];
+  }
+
+  if (name.startsWith('ob-v4.0.1-')) {
+    const v4FallbackImage = `./${name.replace('ob-v4.0.1-', 'ob-v4.0-')}.png`;
+    if (images[v4FallbackImage]) {
+      return images[v4FallbackImage];
+    }
+
+    if (name === 'ob-v4.0.1-ozone-mobile' && images['./ob-v4.0-ozone.png']) {
+      return images['./ob-v4.0-ozone.png'];
+    }
+  }
+
+  return images['./no-image-discovery-icon.png'];
 };
 
 export default {
@@ -100,6 +116,9 @@ export default {
     try {
       const config = JSON.parse(editorString);
       const merged = _.merge(_.cloneDeep(state.configuration), config);
+      if (Object.prototype.hasOwnProperty.call(config, 'v4_standing_order_frequency')) {
+        merged.v4_standing_order_frequency = config.v4_standing_order_frequency;
+      }
       const validKeys = [
         'signing_private',
         'signing_public',
@@ -130,6 +149,7 @@ export default {
         'currency_of_transfer',
         'acr_values_supported',
         'payment_frequency',
+        'v4_standing_order_frequency',
         'first_payment_date_time',
         'requested_execution_date_time',
         'conditional_properties',
@@ -141,6 +161,7 @@ export default {
       // For now, just do a commit for `SET_PAYMENT_FREQUENCY`.
       commit(types.SET_CONFIGURATION, newConfig);
       commit(types.SET_PAYMENT_FREQUENCY, newConfig.payment_frequency);
+      commit(types.SET_V4_STANDING_ORDER_FREQUENCY, newConfig.v4_standing_order_frequency);
       commit(types.SET_CONDITIONAL_PROPERTIES, newConfig.conditional_properties);
 
       dispatch('status/clearErrors', null, { root: true });
@@ -276,10 +297,10 @@ export default {
     if (_.isEmpty(state.configuration.redirect_url)) {
       errors.push('Redirect URL empty');
     }
-    // TODO: Enable this validation rule.
-    // if (_.isEmpty(state.configuration.payment_frequency)) {
-    //   errors.push('Payment frequency empty');
-    // }
+    if (!validatePaymentFrequency(state.configuration.payment_frequency)) {
+      errors.push('Payment frequency must be a valid Frequency_1 value');
+    }
+    errors.push(...validateV4StandingOrderFrequency(state.configuration.v4_standing_order_frequency));
 
     if (!_.isEmpty(errors)) {
       dispatch('status/setErrors', errors, { root: true });

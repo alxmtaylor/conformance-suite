@@ -16,46 +16,46 @@ To provide feedback, please see the [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Release Notes
 
-### v1.9.7 - 2026-03-05
+### v1.10.0 - 2026-08-13
 
 [Full Release Notes](https://github.com/OpenBankingUK/conformance-suite/blob/develop/docs/releases/releases.md)
 
 ---
 **Download**:
-`docker run --rm -it -p 127.0.0.1:8443:8443 "openbanking/conformance-suite:v1.9.7"` |
+`docker run --rm -it -p 127.0.0.1:8443:8443 "openbanking/conformance-suite:v1.10.0"` |
 [DockerHub](https://hub.docker.com/r/openbanking/conformance-suite) |
 [Setup Guide](https://github.com/OpenBankingUK/conformance-suite/blob/develop/docs/setup-guide.md)
 ---
 
 ## Version table
 
-| Release | Standard version                                                                               |
-|---------|------------------------------------------------------------------------------------------------|
-| v1.9.7  | <ul><li>v4.0.0 - Swagger Update 5</li><li>cVRP (based on OBL 4.0.0 Swagger Update 4)</li></ul> |
-| v1.9.6  | <ul><li>v4.0.0 - Swagger Update 5</li><li>cVRP (based on OBL 4.0.0 Swagger Update 4)</li></ul> |
-| v1.9.5  | v4.0.0 - Swagger Update 4                                                                      |
-| v1.9.2  | v4.0.0 - Swagger Update 3                                                                      |
-| v1.9.0  | v4.0.0 - Swagger Update 2                                                                      |
-| v1.8.0  | v4.0.0                                                                                         |
-| v1.7.6  | v3.1.11                                                                                        |
-| v1.7.0  | v3.1.10                                                                                        |
-| v1.6.12 | v3.1.9                                                                                         |
+| Release | Standard version |
+| --- | --- |
+| v1.10.0 | v4.0.1 |
+| v1.9.7 | <ul><li>v4.0.0 - Swagger Update 5</li><li>cVRP (based on OBL 4.0.0 Swagger Update 4)</li></ul> |
+| v1.9.6 | <ul><li>v4.0.0 - Swagger Update 5</li><li>cVRP (based on OBL 4.0.0 Swagger Update 4)</li></ul> |
+| v1.9.5 | v4.0.0 - Swagger Update 4 |
+| v1.9.2 | v4.0.0 - Swagger Update 3 |
+| v1.9.0 | v4.0.0 - Swagger Update 2 |
+| v1.8.0 | v4.0.0 |
+| v1.7.6 | v3.1.11 |
+| v1.7.0 | v3.1.10 |
+| v1.6.12 | v3.1.9 |
 
 ## Quickstart
 
 Pull and run the latest (stable) tagged Docker image:
 
-    > docker run --rm -it -p 127.0.0.1:8443:8443 "openbanking/conformance-suite:v1.9.7"
+    > docker run --rm -it -p 127.0.0.1:8443:8443 "openbanking/conformance-suite:v1.10.0"
 
 or
 
-    > docker run --rm -it -p 8443:8443 "openbanking/conformance-suite:v1.9.7"
-
+    > docker run --rm -it -p 8443:8443 "openbanking/conformance-suite:v1.10.0"
 [See Setup Guide](https://github.com/OpenBankingUK/conformance-suite/blob/develop/docs/setup-guide.md)
 
 ### Prerequisites
 
-The tool is compatible with the Open Banking UK R/W specification versions: 3.1.0, 3.1.1, 3.1.2, 3.1.3, 3.1.4, 3.1.5, 3.1.6, 3.1.7, 3.1.8, 3.1.9, 3.1.10, 3.1.11, 4.0.0.
+The tool is compatible with the Open Banking UK R/W specification versions: 3.1.0, 3.1.1, 3.1.2, 3.1.3, 3.1.4, 3.1.5, 3.1.6, 3.1.7, 3.1.8, 3.1.9, 3.1.10, 3.1.11, 4.0.0, 4.0.1.
 
 In order to run a container you'll need docker installed.
 
@@ -83,6 +83,56 @@ Please note, the sample file requires the following fields to be updated before 
 
 * `openidConfigurationUri`
 * `resourceBaseUri`
+
+## Discovery file info for v4.0.1
+
+### AIS
+
+```json
+"apiSpecification": {
+          "name": "Account and Transaction API Specification",
+          "url": "https://openbankinguk.github.io/read-write-api-site3/v4.0.1/profiles/account-and-transaction-api-profile.html",
+          "version": "v4.0.1",
+          "schemaVersion": "https://raw.githubusercontent.com/OpenBankingUK/read-write-api-specs/v4.0.1/dist/openapi/account-info-openapi.json",
+          "manifest": "file://manifests/ob_4.0_accounts_transactions_fca.json"
+        },
+```
+
+### PIS
+
+```json
+"apiSpecification": {
+          "name": "Payment Initiation API",
+          "url": "https://openbankinguk.github.io/read-write-api-site3/v4.0.1/profiles/payment-initiation-api-profile.html",
+          "version": "v4.0.1",
+          "schemaVersion": "https://raw.githubusercontent.com/OpenBankingUK/read-write-api-specs/v4.0.1/dist/openapi/payment-initiation-openapi.json",
+          "manifest": "file://manifests/ob_4.0_payment_fca.json"
+        },
+```
+
+### CBPII
+
+```json
+"apiSpecification": {
+          "name": "Confirmation of Funds API Specification",
+          "url": "https://openbankinguk.github.io/read-write-api-site3/v4.0.1/profiles/confirmation-of-funds-api-profile.html",
+          "version": "v4.0.1",
+          "schemaVersion": "https://raw.githubusercontent.com/OpenBankingUK/read-write-api-specs/v4.0.1/dist/openapi/confirmation-funds-openapi.json",
+          "manifest": "file://manifests/ob_4.0_cbpii_fca.json"
+        },
+```
+
+### VRP
+
+```json
+"apiSpecification": {
+          "name": "Variable Recurring Payments API Specification",
+          "url": "https://openbankinguk.github.io/read-write-api-site3/v4.0.1/profiles/vrp-profile.html",
+          "version": "v4.0.1",
+          "schemaVersion": "https://raw.githubusercontent.com/OpenBankingUK/read-write-api-specs/v4.0.1/dist/openapi/vrp-openapi.json",
+          "manifest": "file://manifests/ob_4.0_variable_recurring_payments.json"
+        },
+```
 
 ## Advanced Logging
 

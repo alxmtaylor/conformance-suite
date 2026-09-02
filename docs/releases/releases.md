@@ -1,5 +1,56 @@
 # Release history
 
+## [1.10.0] - 13/08/2026
+
+### Fixed
+
+- Corrected the Beneficiary Basic permission assertion descriptions for `OB-400-BEN-101800` and `OB-400-BEN-101900` so failures for `CreditorAgent` and `CreditorAccount` identify the matching fields accurately.
+- Corrected v4.0 Domestic Standing Order minimal payloads to use `Frequency.Type` of `WEEK` with `Frequency.PointInTime` of `03`, without `Frequency.CountPerPeriod`.
+- Updated v4.0 standing order consent test `OB-400-DOP-101503` to reject `Frequency.CountPerPeriod` with `Frequency.PointInTime`, rather than rejecting valid bounded schedules that use `Frequency.CountPerPeriod` with `FinalPaymentDateTime`.
+- Reinstated v3.1 standing order response guard `OB-301-DOP-1015002`, which fails when `FinalPaymentAmount` is present without either `NumberOfPayments` or `FinalPaymentDateTime`.
+
+### Changed
+
+- Increased the desktop PSU consent authorization popup to a larger 900px by 900px target size, with screen-size clamping, to improve Ozone model bank viewing during consent flows.
+
+### Added
+
+- Added optional `v4_standing_order_frequency` config/UI support for v4 standing-order success payloads. It defaults to `Type` `WEEK` and `PointInTime` `03`, remains separate from v3 `payment_frequency`, and discovery conditional properties still override matching request-body paths after defaults are applied.
+- Made the standing-order frequency controls discovery-aware in the configuration UI: v3-only payment discovery shows the legacy `payment_frequency` control, v4-only discovery shows the structured `v4_standing_order_frequency` control, and mixed or unknown discovery shows both. Missing `payment_frequency` now defaults to `EvryDay` for backwards compatibility.
+- Updated standing-order frequency configuration so `payment_frequency` is entered as a full v3 `Frequency_1` regex value, and v4 `v4_standing_order_frequency.Type` accepts either the latest `OBFrequency6Code` values, including `LWMH`, `LXMH`, and `TWYR`, or a legacy `Frequency_1` value. The v4 UI keeps legacy and structured frequency modes mutually exclusive by clearing the opposing mode's fields.
+- Aligned v4 standing-order `PointInTime` and `CountPerPeriod` config validation with the v4.0.1 data dictionary: structured Type-only configs remain allowed, `PointInTime` accepts numeric text up to two characters including negative single-digit values, `CountPerPeriod` is bounded to positive Int32 values, and `LXMH` weekday usage is documented as guidance only.
+
+## [1.9.9] - 08/07/2026
+
+### Added
+
+- Full v4.0.1 support in the UI sidebar and discovery templates. The sidebar version selector now defaults to v4.0.1 and lists versions newest-first. Discovery template cards for v4.0.1 (generic, Ozone PSU, Ozone headless, Ozone mobile) are available when v4.0.1 is selected.
+
+## [1.9.8] - 02/07/2026
+
+### Added
+
+- Added support for Open Banking UK v4.0.1 OpenAPI schema files
+
+### Changed
+
+- Updated regex engine as per 1.9.8 - Beta 1
+
+## [1.9.8-beta1] - 21/04/2026
+
+### Changed
+
+- OpenAPI schema `pattern` fields are now compiled and evaluated using `regexp2` (PCRE) at both spec load time and runtime request/response validation. RE2-compatible patterns are unaffected (RE2 is a strict subset of PCRE).
+
+### Added
+
+- Added support for Open Banking UK v4.0.1 OpenAPI schema files
+
+## Fixed
+
+- Fixed `OB-400-DOP-101503` (v4.0) and `OB-301-DOP-1015003` (v3.1) sending `Content-Type: text/plain` instead of `application/json` when posting the negative standing order consent payload, causing ASPSPs to respond with HTTP 415 instead of the expected HTTP 400.
+- Fixed incorrect test case ID references in v1.9.6 release notes from `OB-400-DOP-1015003` to `OB-400-DOP-101503`
+
 ## [1.9.7] - 05/03/2026
 
 ## Changed
@@ -21,7 +72,7 @@
 - Added extra assertion checks for `ReadAccountsDetail`, `ReadBeneficiariesDetail`, and `ReadTransactionsDetail` tests for v3 and v4
 - added support for Commercial VRP (cVRP)
 - Add enhanced logging for test case authorization and execution
-- Added tests `OB-301-DOP-1015003` and `OB-400-DOP-1015003` which validate the following:
+- Added tests `OB-301-DOP-1015003` and `OB-400-DOP-101503` which validate the following:
   - OB-301-DOP-1015003 (v3): validates that `NumberOfPayments` and `FinalPaymentDateTime` are correctly rejected when included in a consent payload at the same time.
   - OB-400-DOP-101500 (v4): validates that `CountPerPeriod` and `FinalPaymentDateTime` are correctly rejected when included in a consent payload at the same time.
 
@@ -32,7 +83,7 @@
 
 ### Removed
 
-- Removed `OB-301-DOP-1015002` (v3) and `OB-400-DOP-1015002` (v4) tests as these are replaced by test ID `OB-301-DOP-1015003` and `OB-400-DOP-1015003` respectively.
+- Removed `OB-301-DOP-1015002` (v3) and `OB-400-DOP-1015002` (v4) tests as these are replaced by test ID `OB-301-DOP-1015003` and `OB-400-DOP-101503` respectively.
 
 ## [1.9.6-beta5] - 30/12/2025
 
@@ -460,6 +511,11 @@ v3.1 of the OBIE Accounts and Transactions specifications and Payments.
 ---
 
 [More Releases](docs/releases)
+[Unreleased]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.9...v1.10.0
+[1.9.9]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.8...v1.9.9
+[1.9.8]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.8-beta1...v1.9.8
+[1.9.8-beta1]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.7...v1.9.8-beta1
 [1.9.7]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.7-beta1...v1.9.7
 [1.9.7-beta1]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.6...v1.9.7-beta1
 [1.9.6]: https://github.com/OpenBankingUK/conformance-suite/compare/v1.9.5...v1.9.6
@@ -499,4 +555,3 @@ As seen on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/#how).
 * `Removed` for now removed features.
 * `Fixed` for any bug fixes.
 * `Security` in case of vulnerabilities.
-
